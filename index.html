@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zenith | Links</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Tajawal:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Three.js and Vanta.js for realistic clouds -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.clouds.min.js"></script>
+
+    <style>
+        :root {
+            /* Dark Mode Defaults */
+            --bg-color: #0b0c10;
+            --bg-center: #272c3d;
+            --text-main: #f3f3f3;
+            --text-sub: #9ca3af;
+
+            --btn-bg: #111216;
+            --btn-border: #333845;
+
+            --special-btn-bg: #181a20;
+            --special-btn-border: #42495a;
+
+            --cloud-sky: #0b0c10;
+            --cloud-color: #1f2230;
+        }
+
+        [data-theme="light"] {
+            /* Light Mode Defaults */
+            --bg-color: #d1c6b1;
+            --bg-center: #e8dbcc;
+            --text-main: #2d241e;
+            --text-sub: #5c4e41;
+
+            --btn-bg: #e3d9c7;
+            --btn-border: #bdae9c;
+
+            --special-btn-bg: #d4c8b3;
+            --special-btn-border: #a89886;
+
+            --cloud-sky: #e8dbcc;
+            --cloud-color: #faf5eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Tajawal', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            /* Distinct background gradient */
+            background: radial-gradient(circle at 50% 10%, var(--bg-center) 0%, var(--bg-color) 70%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px 80px;
+            transition: background 0.6s ease, color 0.6s ease;
+            position: relative;
+        }
+
+        #cloud-bg {
+            position: fixed;
+            /* Keep it fixed */
+            top: 0;
+            left: 0;
+            width: 100%;
+            /* Better than vw for scrollbar issues */
+            height: 100%;
+            /* Cover screen fully */
+            z-index: -1;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        /* --- Theme Toggle --- */
+        .theme-toggle {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: var(--btn-bg);
+            border: 1px solid var(--btn-border);
+            color: var(--text-main);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- Avatar (Enlarged) --- */
+        .avatar {
+            width: 135px;
+            /* Noticeably larger */
+            height: 135px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--btn-border);
+            margin-bottom: 25px;
+        }
+
+        /* --- Profile Info --- */
+        .name-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .name {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0px;
+            /* Reduced gap */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .reveal-btn {
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            cursor: pointer;
+            font-size: 0.95rem;
+            padding: 2px 5px;
+            margin-top: 2px;
+            /* Pull arrow up closer */
+        }
+
+        .full-name-reveal {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            font-weight: 400;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .full-name-reveal.show {
+            opacity: 1;
+            max-height: 30px;
+            margin-top: 8px;
+            /* Appears only when expanded */
+            margin-bottom: 8px;
+            /* Appears only when expanded */
+        }
+
+        .pronouns {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-top: 5px;
+            margin-bottom: 20px;
+            /* Greatly reduced from 45px */
+            letter-spacing: 1px;
+            text-transform: lowercase;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: var(--btn-bg);
+            border: 1px solid var(--btn-border);
+        }
+
+        .bio {
+            font-size: 1rem;
+            color: var(--text-main);
+            text-align: center;
+            margin-bottom: 45px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bio-italic {
+            font-style: italic;
+            font-size: 1.15rem;
+        }
+
+        .bio-details {
+            font-weight: 400;
+            color: var(--text-main);
+        }
+
+        .saudi-flag {
+            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+        }
+
+        /* --- Spotify Embed --- */
+        .spotify-container {
+            width: 100%;
+            margin-bottom: 35px;
+            border-radius: 20px;
+            position: relative;
+            padding: 2px;
+            /* Changed colors to match the app theme instead of generic white */
+            background: linear-gradient(45deg, var(--btn-bg), var(--btn-border), var(--btn-bg));
+            background-size: 200% 200%;
+            animation: borderGradient 4s ease infinite;
+        }
+
+        [data-theme="light"] .spotify-container {
+            background: linear-gradient(45deg, var(--btn-bg), var(--btn-border), var(--btn-bg));
+        }
+
+        @keyframes borderGradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .spotify-inner {
+            background-color: var(--btn-bg);
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            border: 1px solid var(--btn-border);
+        }
+
+        /* --- Links --- */
+        .links {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .link-card {
+            display: flex;
+            align-items: stretch;
+            /* Stretch children to fill height */
+            background: var(--btn-bg);
+            border: 1px solid var(--btn-border);
+            border-radius: 50px;
+            text-decoration: none;
+            color: var(--text-main);
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .link-card.active-state {
+            background-color: var(--special-btn-bg);
+        }
+
+        /* The clickable link area */
+        .link-main-area {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex: 1;
+            /* Takes up all available space */
+            padding: 10px 10px 10px 10px;
+            /* Standard padding */
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-main);
+            overflow: hidden;
+            /* Prevent text spilling over */
+        }
+
+        .link-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .link-icon-bg {
+            width: 48px;
+            height: 48px;
+            background-color: transparent;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--btn-border);
+        }
+
+        /* Colored Icons */
+        .fa-snapchat {
+            color: #FFFC00;
+        }
+
+        .fa-instagram {
+            color: #E1306C;
+        }
+
+        .fa-tiktok {
+            color: #ffffff;
+        }
+
+        .fa-discord {
+            color: #5865F2;
+        }
+
+        .fa-steam {
+            color: #cbd5e1;
+        }
+
+        .fa-pinterest {
+            color: #E60023;
+        }
+
+        .fa-whatsapp {
+            color: #25D366;
+        }
+
+        .fa-envelope {
+            color: #EA4335;
+        }
+
+        .fa-phone {
+            color: #34A853;
+        }
+
+        [data-theme="light"] .fa-tiktok {
+            color: #000000;
+        }
+
+        [data-theme="light"] .fa-steam {
+            color: #171a21;
+        }
+
+        .link-icon-bg i {
+            font-size: 1.4rem;
+        }
+
+        .full-app-title {
+            font-weight: 500;
+            font-size: 1.05rem;
+            letter-spacing: 0.2px;
+        }
+
+        .username-right {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            font-weight: 400;
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .countdown-text {
+            font-size: 0.75rem;
+            color: #E1306C;
+            margin-top: 2px;
+        }
+
+        /* --- Copy Button Area --- */
+        .copy-btn-area {
+            /* Now part of flex layout instead of absolute positioning */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            /* Fixed width */
+            flex-shrink: 0;
+            /* Prevent shrinking */
+            border-left: 1px solid transparent;
+            /* Keeps separation clean */
+            cursor: pointer;
+            color: var(--text-sub);
+            transition: all 0.2s ease;
+            font-size: 1.1rem;
+            margin-right: 5px;
+            /* slight padding from right edge */
+        }
+
+        .copy-btn-area:hover {
+            color: var(--text-main);
+            transform: scale(1.1);
+        }
+
+        .copy-btn-area:active {
+            transform: scale(0.95);
+        }
+
+        /* Feedback pulse for copy */
+        .copy-success {
+            color: #25D366 !important;
+            animation: popIcon 0.3s ease;
+        }
+
+        @keyframes popIcon {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.3);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* --- Special Buttons (Email & Phone) --- */
+        .link-card.special {
+            border-radius: 12px;
+            margin-top: 10px;
+        }
+
+        .link-card.special .link-main-area {
+            background: var(--special-btn-bg);
+            padding: 15px 10px 15px 20px;
+        }
+
+        .link-card.special .copy-btn-area {
+            background: var(--special-btn-bg);
+            /* Match */
+            width: 45px;
+        }
+
+        .link-card.special .link-icon-bg {
+            border: none;
+            width: 35px;
+            height: 35px;
+        }
+
+        .link-card.special i {
+            font-size: 1.5rem;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--btn-border);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .toast.show {
+            bottom: 30px;
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="theme-toggle" id="theme-btn" aria-label="Toggle Theme">
+        <i class="fa-solid fa-moon"></i>
+    </button>
+
+    <!-- Background clouds across whole page -->
+    <div id="cloud-bg"></div>
+
+    <div class="container">
+
+        <img src="./avatar.png" alt="Zenith" class="avatar"
+            onerror="this.src='https://ui-avatars.com/api/?name=Zenith&background=111216&color=fff&size=200'">
+
+        <!-- Centered Name with Arrow Below -->
+        <div class="name-container">
+            <h1 class="name">
+                Zenith
+                <button class="reveal-btn" id="reveal-btn" aria-label="Show Full Name"><i
+                        class="fa-solid fa-chevron-down"></i></button>
+            </h1>
+            <div class="full-name-reveal" id="full-name">Zeyad Hamzah Halawani</div>
+            <div class="pronouns">he/him</div>
+        </div>
+
+        <!-- Bio with explicit flag emoji fix -->
+        <div class="bio">
+            <span class="bio-italic">Aviothic ✈︎</span>
+            <span class="bio-details">【 boy 👨‍✈️ ┊ <span class="saudi-flag">&#x1F1F8;&#x1F1E6;</span> ksa ┊ intp 🔮
+                】</span>
+        </div>
+
+        <!-- Animated Spotify Embed -->
+        <div class="spotify-container">
+            <div class="spotify-inner">
+                <iframe style="border-radius:18px; border:none;"
+                    src="https://open.spotify.com/embed/track/3ZCTVFBt2Brf31RLEnCkWJ?utm_source=generator&theme=0"
+                    width="100%" height="152" allowfullscreen=""
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"></iframe>
+            </div>
+        </div>
+
+        <!-- Links Container -->
+        <div class="links">
+
+            <div class="link-card">
+                <a href="https://www.snapchat.com/add/zenith_zy?share_id=7wAqP09Oy2g&locale=en-US" target="_blank"
+                    class="link-main-area js-mobile-link">
+                    <div class="link-left">
+                        <div class="link-icon-bg"><i class="fa-brands fa-snapchat"></i></div>
+                        <span class="full-app-title">Snapchat</span>
+                    </div>
+                    <span class="username-right">zenith_zy</span>
+                </a>
+                <div class="copy-btn-area" data-copy="zenith_zy" title="Copy Username">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+            <div class="link-card">
+                <a href="https://www.instagram.com/__zenith.__.__?igsh=MTRuMngxY3BuOWxpbg==" target="_blank"
+                    class="link-main-area js-mobile-link">
+                    <div class="link-left">
+                        <div class="link-icon-bg"><i class="fa-brands fa-instagram"></i></div>
+                        <span class="full-app-title">Instagram</span>
+                    </div>
+                    <span class="username-right">__zenith.__.__</span>
+                </a>
+                <div class="copy-btn-area" data-copy="__zenith.__.__" title="Copy Username">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+            <div class="link-card">
+                <a href="https://www.tiktok.com/@zenith..__?_r=1&_t=ZS-94bxQRDfmfo" target="_blank"
+                    class="link-main-area js-mobile-link">
+                    <div class="link-left">
+                        <div class="link-icon-bg"><i class="fa-brands fa-tiktok"></i></div>
+                        <span class="full-app-title">TikTok</span>
+                    </div>
+                    <span class="username-right">@zenith..__</span>
+                </a>
+                <div class="copy-btn-area" data-copy="@zenith..__" title="Copy Username">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+            <div class="link-card">
+                <a href="https://discord.gg/MtHU48uu" target="_blank" class="link-main-area js-mobile-link">
+                    <div class="link-left">
+                        <div class="link-icon-bg"><i class="fa-brands fa-discord"></i></div>
+                        <span class="full-app-title">Discord</span>
+                    </div>
+                    <!-- Username correctly formatted: __zenith.__ -->
+                    <span class="username-right">__zenith.__</span>
+                </a>
+                <div class="copy-btn-area" data-copy="__zenith.__" title="Copy Discord">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+            <div class="link-card">
+                <a href="https://s.team/p/htrj-chtm/ptbgmgmc" target="_blank" class="link-main-area js-mobile-link">
+                    <div class="link-left">
+                        <div class="link-icon-bg"><i class="fa-brands fa-steam"></i></div>
+                        <span class="full-app-title">Steam</span>
+                    </div>
+                    <span class="username-right">
+                        <span>add me</span>
+                        <span class="countdown-text" id="steam-countdown">Expired</span>
+                    </span>
+                </a>
+                <div class="copy-btn-area" data-copy="https://s.team/p/htrj-chtm/ptbgmgmc" title="Copy Profile Link">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+            <div class="link-card">
+                <a href="https://pin.it/6n25Iatxl" target="_blank" class="link-main-area js-mobile-link">
+                    <div class="link-left">
+                        <div class="link-icon-bg"><i class="fa-brands fa-pinterest"></i></div>
+                        <span class="full-app-title">Pinterest</span>
+                    </div>
+                    <!-- Fixed by master CSS padding rather than inline padding -->
+                    <span class="username-right"
+                        style="font-size: 0.75rem; white-space: normal; line-height: 1.2; text-align: right;">I don't
+                        think any one cares right but here it is</span>
+                </a>
+                <div class="copy-btn-area" data-copy="https://pin.it/6n25Iatxl" title="Copy Pinterest Link">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+            <div class="link-card">
+                <a href="https://Wa.me/0545358582" target="_blank" class="link-main-area js-mobile-link">
+                    <div class="link-left">
+                        <div class="link-icon-bg"><i class="fa-brands fa-whatsapp"></i></div>
+                        <span class="full-app-title">WhatsApp</span>
+                    </div>
+                    <span class="username-right">(+966) 545358582</span>
+                </a>
+                <div class="copy-btn-area" data-copy="+966545358582" title="Copy Phone Number">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+            <!-- Distinguishable Contact Links -->
+            <div class="link-card special">
+                <a href="mailto:zeyadhalawani.ksa@gmail.com" class="link-main-area js-mobile-link">
+                    <div class="link-left">
+                        <div class="link-icon-bg"><i class="fa-solid fa-envelope"></i></div>
+                        <span class="full-app-title">Email</span>
+                    </div>
+                    <span class="username-right" style="font-size:0.8rem">zeyad...ksa@gmail</span>
+                </a>
+                <div class="copy-btn-area" data-copy="zeyadhalawani.ksa@gmail.com" title="Copy Email">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+            <div class="link-card special">
+                <a href="tel:+966545358582" class="link-main-area js-mobile-link">
+                    <div class="link-left">
+                        <div class="link-icon-bg"><i class="fa-solid fa-phone"></i></div>
+                        <span class="full-app-title">Phone</span>
+                    </div>
+                    <span class="username-right">(+966) 545 358 582</span>
+                </a>
+                <div class="copy-btn-area" data-copy="+966545358582" title="Copy Phone Number">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast Element -->
+    <div id="toast" class="toast">Copied to clipboard!</div>
+
+    <script>
+        // --- Full Name Reveal Logic ---
+        const revealBtn = document.getElementById('reveal-btn');
+        const fullName = document.getElementById('full-name');
+        const revealIcon = revealBtn.querySelector('i');
+
+        revealBtn.addEventListener('click', () => {
+            fullName.classList.toggle('show');
+            if (fullName.classList.contains('show')) {
+                revealIcon.style.transform = 'rotate(180deg)';
+                revealIcon.style.color = 'var(--text-main)';
+            } else {
+                revealIcon.style.transform = 'rotate(0deg)';
+                revealIcon.style.color = 'var(--text-sub)';
+            }
+        });
+
+        // --- Mobile Friendly Link "Click" Effect ---
+        const linkAreas = document.querySelectorAll('.js-mobile-link');
+
+        linkAreas.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const url = this.getAttribute('href');
+                const target = this.getAttribute('target');
+
+                // Add active state to parent card
+                this.parentElement.classList.add('active-state');
+
+                setTimeout(() => {
+                    this.parentElement.classList.remove('active-state');
+                    if (target === "_blank") {
+                        window.open(url, '_blank');
+                    } else {
+                        window.location.href = url;
+                    }
+                }, 150);
+            });
+        });
+
+        // --- Copy to Clipboard Functionality ---
+        const copyBtns = document.querySelectorAll('.copy-btn-area');
+        const toast = document.getElementById('toast');
+        let toastTimeout;
+
+        copyBtns.forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation(); // Stop event from bubbling up just in case
+
+                const textToCopy = this.getAttribute('data-copy');
+                const icon = this.querySelector('i');
+
+                // Native Copy API
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    // Success UI feedback
+                    icon.className = 'fa-solid fa-check copy-success';
+
+                    // Show Toast
+                    toast.innerText = `${textToCopy} copied!`;
+                    toast.classList.add('show');
+
+                    clearTimeout(toastTimeout);
+                    toastTimeout = setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 2500);
+
+                    // Reset icon after 1.5s
+                    setTimeout(() => {
+                        icon.className = 'fa-regular fa-copy';
+                    }, 1500);
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            });
+        });
+
+        // --- Steam Countdown Logic ---
+        function updateSteamCountdown() {
+            const el = document.getElementById('steam-countdown');
+            const now = new Date();
+            // Automatically reset every end of the month
+            const targetDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                el.innerText = "Expired";
+            } else {
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                el.innerText = `Expires in ${days}d ${hours}h`;
+            }
+        }
+        setInterval(updateSteamCountdown, 1000 * 60 * 60); // Update every hour
+        updateSteamCountdown();
+
+        // --- Realistic Clouds Background (Vanta.js) ---
+        let vantaEffect;
+
+        function initClouds(isLightMode) {
+            if (vantaEffect) vantaEffect.destroy();
+
+            const skyColor = isLightMode ? 0xe8dbcc : 0x0b0c10;
+            const cloudColor = isLightMode ? 0xfaf5eb : 0x1f2230;
+            const cloudShadow = isLightMode ? 0xc7b9a5 : 0x050508;
+
+            /* Ensuring it scales correctly using pure CSS handling without manual MinWidth/MinHeight overrides */
+            vantaEffect = VANTA.CLOUDS({
+                el: "#cloud-bg",
+                mouseControls: false,
+                touchControls: false,
+                gyroControls: false,
+                backgroundColor: skyColor,
+                skyColor: skyColor,
+                cloudColor: cloudColor,
+                cloudShadowColor: cloudShadow,
+                sunColor: skyColor,
+                sunGlareColor: skyColor,
+                sunPosition: { x: 0, y: 0, z: 0 },
+                speed: 1.0
+            });
+        }
+
+        // Advanced resize handling for mobile and desktop zooming issues
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (vantaEffect) {
+                    // Update dimensions without zooming artifacts
+                    vantaEffect.resize();
+                }
+            }, 50);
+        });
+
+        // --- Theme Toggle Logic ---
+        const themeBtn = document.getElementById('theme-btn');
+        const themeIcon = themeBtn.querySelector('i');
+
+        function setTheme(isLight) {
+            if (isLight) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                themeIcon.className = 'fa-solid fa-sun';
+                localStorage.setItem('theme', 'light');
+                initClouds(true);
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeIcon.className = 'fa-solid fa-moon';
+                localStorage.setItem('theme', 'dark');
+                initClouds(false);
+            }
+        }
+
+        themeBtn.addEventListener('click', () => {
+            const isLight = document.documentElement.getAttribute('data-theme') !== 'light';
+            setTheme(isLight);
+        });
+
+        // Initialize theme on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                setTheme(true);
+            } else {
+                setTheme(false);
+            }
+        });
+
+    </script>
+</body>
+
+</html>
