@@ -441,15 +441,17 @@
         .link-card.special {
             border-radius: 12px;
             margin-top: 10px;
+            background: var(--special-btn-bg) !important;
+            border-color: var(--special-btn-border) !important;
         }
 
         .link-card.special .link-main-area {
-            background: var(--special-btn-bg);
+            background: transparent;
             padding: 15px 10px 15px 20px;
         }
 
         .link-card.special .copy-btn-area {
-            background: var(--special-btn-bg);
+            background: transparent;
             /* Match */
             width: 45px;
         }
@@ -792,6 +794,17 @@
                 sunPosition: { x: 0, y: 0, z: 0 },
                 speed: 1.0
             });
+            
+            updateCloudZoom();
+        }
+
+        function updateCloudZoom() {
+            if (vantaEffect && vantaEffect.camera) {
+                // Zoom out on mobile so it actually looks like distant clouds, not zoomed in colors
+                const zOut = window.innerWidth <= 768 ? 0.35 : 0.8;
+                vantaEffect.camera.zoom = zOut;
+                vantaEffect.camera.updateProjectionMatrix();
+            }
         }
 
         // Advanced resize handling for mobile and desktop zooming issues
@@ -802,6 +815,7 @@
                 if (vantaEffect) {
                     // Update dimensions without zooming artifacts
                     vantaEffect.resize();
+                    updateCloudZoom();
                 }
             }, 50);
         });
